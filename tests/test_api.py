@@ -15,6 +15,20 @@ def png_image(size: tuple[int, int] = (32, 32)) -> bytes:
     return output.getvalue()
 
 
+def test_accepts_image_format_outside_original_allowlist(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(api, "remove_watermark", lambda image, **kwargs: image)
+    output = io.BytesIO()
+    Image.new("RGB", (32, 32), (128, 128, 128)).save(output, format="BMP")
+    response = client.post(
+        "/v1/process",
+        files={"file": ("image.bmp", output.getvalue(), "image/bmp")},
+    )
+
+    assert response.status_code == 200
+    with Image.open(io.BytesIO(response.content)) as result:
+        assert result.format == "PNG"
+
+
 def test_health_check():
     response = client.get("/healthz")
 
@@ -22,14 +36,19 @@ def test_health_check():
     assert response.json() == {"status": "ok"}
 
 
-def test_frontend_is_served_on_root_and_docs_routes():
+def test_frontend_is_served_on_home_with_embedded_playground_and_docs():
     home = client.get("/")
     docs = client.get("/docs/")
     docs_without_slash = client.get("/docs")
-    stylesheet = client.get("/assets/styles.css")
+    stylesheet = client.get("/styles.css")
 
     assert home.status_code == 200
     assert "Clean up Gemini images." in home.text
+    assert 'id="playground"' in home.text
+    assert 'id="drop-zone"' in home.text
+    assert home.text.count('id="choose-image"') == 1
+    assert 'id="preview-modes"' in home.text
+    assert 'id="zoom-in"' in home.text
     assert docs.status_code == 200
     assert "Naymark API Docs" in docs.text
     assert docs_without_slash.status_code == 200

@@ -23,15 +23,6 @@ MAX_OUTPUT_BYTES = 4 * 1024 * 1024
 MAX_IMAGE_PIXELS = 12_000_000
 MAX_IMAGE_DIMENSION = 8_000
 
-IMAGE_FORMATS = {
-    "image/jpeg": ("JPEG", b"\xff\xd8\xff"),
-    "image/png": ("PNG", b"\x89PNG\r\n\x1a\n"),
-    "image/webp": ("WEBP", b"RIFF"),
-}
-
-app.mount("/assets", StaticFiles(directory=PUBLIC_DIR), name="assets")
-
-
 class InvalidImageError(Exception):
     pass
 
@@ -46,13 +37,7 @@ async def disable_caching(
     return response
 
 
-def process_image(payload: bytes, content_type: str) -> bytes:
-    image_format, signature = IMAGE_FORMATS[content_type]
-    if not payload.startswith(signature) or (
-        content_type == "image/webp" and payload[8:12] != b"WEBP"
-    ):
-        raise InvalidImageError
-
+def process_image(payload: bytes) -> bytes:
     try:
         with Image.open(io.BytesIO(payload)) as source:
             width, height = source.size
@@ -64,17 +49,15 @@ def process_image(payload: bytes, content_type: str) -> bytes:
                 or width * height > MAX_IMAGE_PIXELS
             ):
                 raise HTTPException(status_code=413, detail="Image dimensions exceed the limit.")
-            if source.format != image_format:
-                raise InvalidImageError
             source.verify()
+        with Image.open(io.BytesIO(payload)) as source:
+            rgb_image = np.asarray(source.convert("RGB"))
     except HTTPException:
         raise
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
         raise InvalidImageError from exc
 
-    decoded = cv2.imdecode(np.frombuffer(payload, dtype=np.uint8), cv2.IMREAD_COLOR)
-    if decoded is None:
-        raise InvalidImageError
+    decoded = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
 
     result = remove_watermark(decoded, threshold=0.6, max_watermarks=5)
     processed = getattr(result, "image", result)
@@ -115,8 +98,8 @@ async def documentation() -> FileResponse:
 
 @app.post("/v1/process")
 async def process_upload(file: UploadFile = File(...)) -> Response:
-    if file.content_type not in IMAGE_FORMATS:
-        raise HTTPException(status_code=415, detail="Upload a JPEG, PNG, or WebP image.")
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=415, detail="Upload an image file.")
 
     payload = await file.read(MAX_UPLOAD_BYTES + 1)
     if not payload:
@@ -125,7 +108,7 @@ async def process_upload(file: UploadFile = File(...)) -> Response:
         raise HTTPException(status_code=413, detail="Image exceeds the 4 MiB upload limit.")
 
     try:
-        output = await asyncio.to_thread(process_image, payload, file.content_type)
+        output = await asyncio.to_thread(process_image, payload)
     except InvalidImageError as exc:
         raise HTTPException(status_code=400, detail="The uploaded image is invalid.") from exc
     except HTTPException:
@@ -139,3 +122,6 @@ async def process_upload(file: UploadFile = File(...)) -> Response:
         media_type="image/png",
         headers={"Cache-Control": "private, no-store"},
     )
+
+
+app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="public")

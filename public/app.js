@@ -47,14 +47,20 @@ const resultPlaceholder = document.getElementById("result-placeholder");
 const compareLabels = document.getElementById("compare-labels");
 const compareRange = document.getElementById("compare-range");
 const compareDivider = document.getElementById("compare-divider");
+const previewModes = document.getElementById("preview-modes");
+const previewModeButtons = document.querySelectorAll("[data-preview-mode]");
+const zoomOutButton = document.getElementById("zoom-out");
+const zoomInButton = document.getElementById("zoom-in");
+const zoomFitButton = document.getElementById("zoom-fit");
+const zoomLevel = document.getElementById("zoom-level");
 
 if (dropZone && fileInput && processButton && fileStatusText) {
   const maximumBytes = 4 * 1024 * 1024;
-  const acceptedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
   let selectedFile = null;
   let originalUrl = null;
   let processedUrl = null;
   let processing = false;
+  let zoom = 100;
 
   function revokePreview(url) {
     if (url) URL.revokeObjectURL(url);
@@ -63,6 +69,41 @@ if (dropZone && fileInput && processButton && fileStatusText) {
   function setMessage(text, isError = false) {
     message.textContent = text;
     message.classList.toggle("message-error", isError);
+  }
+
+  function setZoom(value) {
+    zoom = Math.max(50, Math.min(200, value));
+    const transform = `scale(${zoom / 100})`;
+    beforeImage.style.transform = transform;
+    afterImage.style.transform = transform;
+    zoomLevel.textContent = `${zoom}%`;
+    zoomOutButton.disabled = !selectedFile || zoom <= 50;
+    zoomInButton.disabled = !selectedFile || zoom >= 200;
+    zoomFitButton.disabled = !selectedFile || zoom === 100;
+  }
+
+  function setPreviewMode(mode) {
+    const hasImage = Boolean(selectedFile);
+    const hasResult = Boolean(processedUrl);
+    const isCompare = hasResult && mode === "compare";
+    const showResult = hasResult && mode !== "original";
+
+    beforeImage.hidden = !hasImage || (hasResult && mode === "result");
+    afterLayer.hidden = !showResult;
+    if (showResult) {
+      afterLayer.style.clipPath = isCompare
+        ? `inset(0 0 0 ${compareRange.value}%)`
+        : "inset(0)";
+    }
+
+    compareLabels.hidden = !isCompare;
+    compareRange.hidden = !isCompare;
+    compareDivider.hidden = !isCompare;
+    if (isCompare) compareDivider.style.left = `${compareRange.value}%`;
+    previewModes.hidden = !hasResult;
+    previewModeButtons.forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.dataset.previewMode === mode));
+    });
   }
 
   function clearPreviews() {
@@ -80,25 +121,23 @@ if (dropZone && fileInput && processButton && fileStatusText) {
     clearPreviews();
     fileInput.value = "";
     emptyState.hidden = false;
-    beforeImage.hidden = true;
-    afterLayer.hidden = true;
     resultPlaceholder.hidden = true;
-    compareLabels.hidden = true;
-    compareRange.hidden = true;
-    compareDivider.hidden = true;
+    compareRange.value = "50";
+    setPreviewMode("original");
+    setZoom(100);
     clearButton.hidden = true;
     downloadButton.hidden = true;
     processButton.disabled = true;
-    processButton.innerHTML = 'Process image <span aria-hidden="true">↗</span>';
+    processButton.innerHTML = 'Remove watermark <span aria-hidden="true">↗</span>';
     fileStatusText.textContent = "No image selected";
     setMessage("");
   }
 
   function selectFile(file) {
     if (processing) return;
-    if (!acceptedTypes.has(file.type)) {
+    if (!file.type.startsWith("image/")) {
       clearSelection();
-      setMessage("Choose a JPEG, PNG, or WebP image.", true);
+      setMessage("Choose an image file.", true);
       return;
     }
     if (file.size > maximumBytes) {
@@ -109,15 +148,14 @@ if (dropZone && fileInput && processButton && fileStatusText) {
 
     clearPreviews();
     selectedFile = file;
+    fileInput.value = "";
     originalUrl = URL.createObjectURL(file);
     beforeImage.src = originalUrl;
-    beforeImage.hidden = false;
     emptyState.hidden = true;
-    afterLayer.hidden = true;
     resultPlaceholder.hidden = false;
-    compareLabels.hidden = true;
-    compareRange.hidden = true;
-    compareDivider.hidden = true;
+    compareRange.value = "50";
+    setPreviewMode("original");
+    setZoom(100);
     clearButton.hidden = false;
     downloadButton.hidden = true;
     processButton.disabled = false;
@@ -130,6 +168,13 @@ if (dropZone && fileInput && processButton && fileStatusText) {
     if (fileInput.files?.[0]) selectFile(fileInput.files[0]);
   });
   clearButton.addEventListener("click", clearSelection);
+
+  previewModeButtons.forEach((button) => {
+    button.addEventListener("click", () => setPreviewMode(button.dataset.previewMode));
+  });
+  zoomOutButton.addEventListener("click", () => setZoom(zoom - 25));
+  zoomInButton.addEventListener("click", () => setZoom(zoom + 25));
+  zoomFitButton.addEventListener("click", () => setZoom(100));
 
   dropZone.addEventListener("dragover", (event) => {
     event.preventDefault();
@@ -186,16 +231,11 @@ if (dropZone && fileInput && processButton && fileStatusText) {
       if (processedUrl) URL.revokeObjectURL(processedUrl);
       processedUrl = URL.createObjectURL(result);
       afterImage.src = processedUrl;
-      afterLayer.hidden = false;
-      afterLayer.style.clipPath = `inset(0 0 0 ${compareRange.value}%)`;
-      compareLabels.hidden = false;
-      compareRange.hidden = false;
-      compareDivider.hidden = false;
-      compareDivider.style.left = `${compareRange.value}%`;
       resultPlaceholder.hidden = true;
       downloadButton.href = processedUrl;
       downloadButton.download = `${file.name.replace(/\.[^.]+$/, "")}-processed.png`;
       downloadButton.hidden = false;
+      setPreviewMode("compare");
       setMessage("Done. Drag the divider to compare your images.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not process this image.", true);

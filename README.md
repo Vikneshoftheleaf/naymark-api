@@ -8,11 +8,11 @@ A small FastAPI service that accepts an image and returns a processed PNG using 
 
 `naymark` supports specific visible watermark patterns in Gemini-generated images. Results are approximate; it is not a general-purpose watermark remover. Only process images you own or are authorized to modify.
 
-The public Vercel site includes an interactive playground at `/` and API documentation at `/docs/`. The playground posts uploads to the same `/v1/process` endpoint described below.
+The public Vercel site includes an interactive image editor on the homepage at `/` and API documentation at `/docs/`. The editor posts uploads to the same `/v1/process` endpoint described below.
 
 ## API
 
-`POST /v1/process` accepts one multipart file field named `file`. JPEG, PNG, and WebP are supported. The response is a PNG image.
+`POST /v1/process` accepts one multipart file field named `file`. Image formats supported by Pillow are accepted, including JPEG, PNG, WebP, BMP, GIF, and TIFF. The response is a PNG image.
 
 ```bash
 curl -X POST "https://YOUR-VERCEL-DOMAIN/v1/process" \

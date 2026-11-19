@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f5f2">
     <meta name="description" content="Remove Naymark's supported visible watermark from Gemini-generated images with a simple API call.">
     <title>Naymark — Gemini watermark removal API</title>
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <script>
       try {
         const theme = localStorage.getItem("naymark-theme");
@@ -17,13 +17,19 @@
         document.documentElement.dataset.theme = "light";
       }
     </script>
-    <link rel="stylesheet" href="/assets/styles.css">
-    <script src="/assets/app.js" defer></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Naymark home">
-        <span class="brand-mark">N</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+            <circle cx="9" cy="10" r="1.5"></circle>
+            <path d="m5 17 4.5-4.5 3.5 3.5 2.5-2.5 3.5 3.5"></path>
+          </svg>
+        </span>
         <span class="brand-name">naymark</span>
         <span class="brand-tag">API</span>
       </a>
@@ -49,10 +55,10 @@
           <h1>Clean up Gemini images.<br><span class="serif-italic">One API call.</span></h1>
           <p class="hero-description">
             Remove Naymark's supported visible watermark from Gemini-generated images.
-            Try it here, or add the API to your app. Results are approximate.
+            Try the image editor or add the API to your app. Results are approximate.
           </p>
           <div class="hero-actions">
-            <a class="button button-dark" href="#playground">Open playground <span aria-hidden="true">↓</span></a>
+            <a class="button button-dark" href="#playground">Try the remover <span aria-hidden="true">↓</span></a>
             <a class="text-link" href="/docs/">Read the docs <span aria-hidden="true">↗</span></a>
           </div>
           <div class="hero-note">
@@ -60,72 +66,107 @@
             <span>Powered by <a href="https://pypi.org/project/naymark/" target="_blank" rel="noreferrer">naymark on PyPI</a></span>
           </div>
         </div>
+        <div class="hero-showcase" aria-label="Example watermark removal">
+          <div class="hero-showcase-glow" aria-hidden="true"></div>
+          <div class="hero-card-grid">
+            <figure class="hero-image-card hero-image-card-before">
+              <div class="hero-image-wrap">
+                <img src="/images/batman-before.png" alt="Batman on a Gotham rooftop with a small visible watermark in the lower-right corner">
+                <span class="hero-image-tag">BEFORE</span>
+              </div>
+              <figcaption><span>Original image</span><span class="hero-card-indicator" aria-hidden="true"></span></figcaption>
+            </figure>
+            <figure class="hero-image-card hero-image-card-after">
+              <div class="hero-image-wrap">
+                <img src="/images/batman-after.png" alt="The same Batman rooftop image after the visible watermark was removed">
+                <span class="hero-image-tag">AFTER</span>
+              </div>
+              <figcaption><span>Processed result</span><span class="hero-card-indicator" aria-hidden="true"></span></figcaption>
+            </figure>
+          </div>
+          <div class="hero-showcase-note"><span class="status-dot"></span> One image. One simple request.</div>
+        </div>
+      </section>
 
-        <div class="playground-card" id="playground">
-          <div class="card-topline">
-            <div class="card-title"><span class="live-dot"></span> LIVE PLAYGROUND</div>
-            <span class="format-note">PNG · JPG · WEBP</span>
+      <section class="home-editor" id="playground">
+        <div class="editor-page-heading">
+          <div>
+            <div class="eyebrow"><span class="status-dot"></span> IMAGE PLAYGROUND</div>
+            <h2>Remove a watermark</h2>
           </div>
-          <div class="image-stage" id="drop-zone" tabindex="0" role="group" aria-label="Image upload and preview area">
-            <div class="empty-state" id="empty-state">
-              <div class="sample-art" aria-hidden="true">
-                <svg viewBox="0 0 520 340" role="img">
-                  <defs>
-                    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0" stop-color="#f2f2ef"/>
-                      <stop offset="1" stop-color="#d8d8d3"/>
-                    </linearGradient>
-                    <pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse">
-                      <path d="M22 0H0V22" fill="none" stroke="#111" stroke-opacity=".07" stroke-width="1"/>
-                    </pattern>
-                  </defs>
-                  <rect width="520" height="340" fill="url(#sky)"/>
-                  <rect width="520" height="340" fill="url(#grid)"/>
-                  <circle cx="361" cy="106" r="52" fill="#f8f8f5"/>
-                  <path d="m0 245 115-103 73 67 104-117 119 130 58-54 51 41v131H0Z" fill="#a5a59f"/>
-                  <path d="m0 278 123-72 92 65 96-81 101 77 63-31 45 21v83H0Z" fill="#70706b"/>
-                  <path d="m0 302 120-50 86 43 106-54 100 41 54-19 54 22v55H0Z" fill="#242421"/>
-                  <path d="M40 43h92M40 55h45" stroke="#222" stroke-opacity=".3" stroke-width="2"/>
-                  <circle cx="435" cy="266" r="25" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/>
-                  <circle cx="435" cy="266" r="13" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/>
-                </svg>
-              </div>
-              <div class="empty-copy">
-                <span class="micro-label">GEMINI IMAGE · VISIBLE WATERMARK</span>
-                <h2>See the difference.</h2>
-                <p>Upload an image you created or can modify.</p>
-                <button class="button button-light" id="choose-image" type="button">Choose an image <span aria-hidden="true">↗</span></button>
-                <span class="drop-hint">PNG, JPG, WEBP · max 4 MB</span>
+          <p>Upload an image, process it, then compare and download the PNG result.</p>
+        </div>
+
+        <div class="editor-workspace">
+          <div class="editor-canvas-panel">
+            <div class="editor-canvas-toolbar">
+              <span class="canvas-title">Canvas</span>
+              <div class="editor-canvas-tools">
+                <div class="preview-mode-switcher" id="preview-modes" role="group" aria-label="Preview mode" hidden>
+                  <button class="preview-mode-button" type="button" data-preview-mode="original" aria-pressed="false">Original</button>
+                  <button class="preview-mode-button" type="button" data-preview-mode="compare" aria-pressed="true">Compare</button>
+                  <button class="preview-mode-button" type="button" data-preview-mode="result" aria-pressed="false">Result</button>
+                </div>
+                <div class="zoom-controls" aria-label="Canvas zoom">
+                  <button class="zoom-button" id="zoom-out" type="button" aria-label="Zoom out" disabled>−</button>
+                  <output class="zoom-level" id="zoom-level" aria-live="polite">100%</output>
+                  <button class="zoom-button" id="zoom-in" type="button" aria-label="Zoom in" disabled>+</button>
+                  <button class="zoom-fit" id="zoom-fit" type="button" disabled>Fit</button>
+                </div>
+                <span class="canvas-output">PNG output</span>
               </div>
             </div>
-            <img class="stage-image" id="before-image" alt="Original uploaded image" hidden>
-            <div class="after-layer" id="after-layer" hidden>
-              <img class="stage-image" id="after-image" alt="Processed image">
+            <div class="image-stage" id="drop-zone" tabindex="0" role="group" aria-label="Image upload and preview area">
+              <div class="empty-state" id="empty-state">
+                <div class="upload-mark" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"></path>
+                  </svg>
+                </div>
+                <div class="empty-copy">
+                  <h3>Drop an image here</h3>
+                  <p>Drag an image here or browse your files.</p>
+                  <button class="button button-light canvas-choose-button" id="choose-image" type="button">Browse files</button>
+                  <span class="drop-hint">Supported image formats · up to 4 MB</span>
+                </div>
+              </div>
+              <img class="stage-image" id="before-image" alt="Original uploaded image" hidden>
+              <div class="after-layer" id="after-layer" hidden>
+                <img class="stage-image" id="after-image" alt="Processed image">
+              </div>
+              <div class="compare-divider" id="compare-divider" hidden><span></span></div>
+              <div class="compare-labels" id="compare-labels" hidden>
+                <span>ORIGINAL</span><span>PROCESSED</span>
+              </div>
+              <div class="result-placeholder" id="result-placeholder" hidden>
+                <span class="placeholder-icon" aria-hidden="true">↔</span>
+                <span>Processed preview appears here</span>
+              </div>
+              <input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Compare original and processed image" hidden>
             </div>
-            <div class="compare-divider" id="compare-divider" hidden><span></span></div>
-            <div class="compare-labels" id="compare-labels" hidden>
-              <span>ORIGINAL</span><span>PROCESSED</span>
+            <input class="visually-hidden" id="file-input" type="file" accept="image/*">
+            <div class="editor-canvas-footer">
+              <div class="editor-file-info">
+                <div class="file-status" id="file-status" aria-live="polite">
+                  <span class="file-status-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                      <circle cx="9" cy="10" r="1.5"></circle>
+                      <path d="m6 17 4-4 3 3 2-2 3 3"></path>
+                    </svg>
+                  </span>
+                  <span id="file-status-text">No image selected</span>
+                </div>
+                <span class="editor-hint">Supported image formats · up to 4 MB</span>
+              </div>
+              <div class="editor-actions">
+                <button class="button button-quiet" id="clear-image" type="button" hidden>Clear</button>
+                <a class="button button-light" id="download-image" download hidden>Download PNG <span aria-hidden="true">↓</span></a>
+                <button class="button button-dark" id="process-image" type="button" disabled>Remove watermark <span aria-hidden="true">↗</span></button>
+              </div>
             </div>
-            <div class="result-placeholder" id="result-placeholder" hidden>
-              <span class="placeholder-icon" aria-hidden="true">✳</span>
-              <span>Your processed image will appear here</span>
-            </div>
-            <span class="stage-index" aria-hidden="true">01 / 01</span>
-            <input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Compare original and processed image" hidden>
-            <input class="visually-hidden" id="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <p class="playground-message" id="playground-message" aria-live="polite"></p>
           </div>
-          <div class="playground-footer">
-            <div class="file-status" id="file-status" aria-live="polite">
-              <span class="file-status-icon" aria-hidden="true">＋</span>
-              <span id="file-status-text">No image selected</span>
-            </div>
-            <div class="playground-actions">
-              <button class="button button-quiet" id="clear-image" type="button" hidden>Clear</button>
-              <a class="button button-light" id="download-image" download hidden>Download PNG <span aria-hidden="true">↓</span></a>
-              <button class="button button-dark" id="process-image" type="button" disabled>Process image <span aria-hidden="true">↗</span></button>
-            </div>
-          </div>
-          <p class="playground-message" id="playground-message" aria-live="polite"></p>
         </div>
       </section>
 
@@ -215,7 +256,13 @@
 
     <footer class="site-footer page-width">
       <a class="brand" href="/" aria-label="Naymark home">
-        <span class="brand-mark">N</span><span class="brand-name">naymark</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+            <circle cx="9" cy="10" r="1.5"></circle>
+            <path d="m5 17 4.5-4.5 3.5 3.5 2.5-2.5 3.5 3.5"></path>
+          </svg>
+        </span><span class="brand-name">naymark</span>
       </a>
       <span>Built for images. Made for developers.</span>
       <div class="footer-links">

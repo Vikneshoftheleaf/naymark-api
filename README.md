@@ -1,59 +1,46 @@
-# Naymark API
+# Naymark
 
 [![naymark on PyPI](https://img.shields.io/pypi/v/naymark?logo=pypi&label=naymark)](https://pypi.org/project/naymark/)
-![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white)
-![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel&logoColor=white)
+[![API documentation](https://img.shields.io/badge/API-documentation-2867B2)](https://naymark.vercel.app/docs/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-service-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://naymark.vercel.app/)
 
-A small FastAPI service that accepts an image and returns a processed PNG using [`naymark`](https://pypi.org/project/naymark/).
+Remove Naymark's supported visible watermark from Gemini-generated images. Results are approximate; this is not a general-purpose watermark remover. Naymark is independent and is not affiliated with Google or Gemini.
 
-`naymark` supports specific visible watermark patterns in Gemini-generated images. Results are approximate; it is not a general-purpose watermark remover. Only process images you own or are authorized to modify.
+## Try it
 
-The public Vercel site includes an interactive image editor on the homepage at `/` and API documentation at `/docs/`. The editor posts uploads to the same `/v1/process` endpoint described below.
+Use the [online image editor](https://naymark.vercel.app/) to upload an image, compare the result, and download a PNG.
 
 ## API
 
-`POST /v1/process` accepts one multipart file field named `file`. Image formats supported by Pillow are accepted, including JPEG, PNG, WebP, BMP, GIF, and TIFF. The response is a PNG image.
+`POST https://naymark.vercel.app/v1/process`
+
+Send one image as multipart form data in the `file` field. The response is a PNG.
 
 ```bash
-curl -X POST "https://YOUR-VERCEL-DOMAIN/v1/process" \
+curl -X POST "https://naymark.vercel.app/v1/process" \
   -F "file=@image.png;type=image/png" \
   --output processed.png
 ```
 
-`GET /healthz` returns `{"status":"ok"}`. The API is public and does not require authentication. Responses are not cached. Uploads are limited to 4 MiB and images to 12 megapixels.
+The API accepts image formats supported by Pillow, up to 4 MiB, 12 megapixels, and 8,000 pixels per dimension. It is public and does not require an API key. `GET /healthz` provides a health check.
 
-## Run locally
+## Python package
 
-Requires Python 3.12.
-
-```bash
-python -m venv .venv
-```
-
-Activate the environment, then install dependencies and start the API:
+The [`naymark` package](https://pypi.org/project/naymark/) runs watermark matching directly in your Python application. Install it with:
 
 ```bash
-pip install -r requirements-dev.txt
-uvicorn app:app --reload
+pip install naymark
 ```
 
-Run tests with:
+```python
+import cv2
+from naymark import remove_watermark
 
-```bash
-pytest
+image = cv2.imread("image.png")
+result = remove_watermark(image)
+processed = getattr(result, "image", result)
+cv2.imwrite("processed.png", processed)
 ```
 
-## Deploy to Vercel
-
-This project uses Vercel's Python runtime; Docker is not required.
-
-**From the Vercel dashboard:** Import this Git repository as a new project, keep the project root at the repository root, and deploy. Vercel installs dependencies from `requirements.txt`, serves the frontend from `public/`, and detects the FastAPI app in `app.py`.
-
-**Using the CLI:**
-
-```bash
-npx vercel
-npx vercel --prod
-```
-
-The `.python-version` file selects Python 3.12. Vercel's Python Functions have platform limits; the API keeps uploads small and returns errors for images or processed output that exceed its limits.
+The package processes images locally. Both the package and API target Naymark's supported visible watermark pattern; reconstruction may be imperfect. Only process images you own or are authorized to modify.

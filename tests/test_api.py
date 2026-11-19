@@ -22,6 +22,21 @@ def test_health_check():
     assert response.json() == {"status": "ok"}
 
 
+def test_frontend_is_served_on_root_and_docs_routes():
+    home = client.get("/")
+    docs = client.get("/docs/")
+    docs_without_slash = client.get("/docs")
+    stylesheet = client.get("/assets/styles.css")
+
+    assert home.status_code == 200
+    assert "Clean up Gemini images." in home.text
+    assert docs.status_code == 200
+    assert "Naymark API Docs" in docs.text
+    assert docs_without_slash.status_code == 200
+    assert stylesheet.status_code == 200
+    assert "color-scheme: light" in stylesheet.text
+
+
 def test_rejects_unsupported_content_type():
     response = client.post(
         "/v1/process",

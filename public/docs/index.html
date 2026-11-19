@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f5f2">
+    <meta name="description" content="API documentation for removing Naymark's supported visible watermark from Gemini-generated images.">
+    <title>Naymark API Docs — Gemini watermark removal</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <script>
+      try {
+        const theme = localStorage.getItem("naymark-theme");
+        document.documentElement.dataset.theme = theme || (
+          matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        );
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script src="/assets/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Naymark home">
+        <span class="brand-mark">N</span>
+        <span class="brand-name">naymark</span>
+        <span class="brand-tag">API</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="/#playground">Playground</a>
+        <a class="active" href="/docs/">Docs</a>
+        <a href="/#python">Python package</a>
+      </nav>
+      <div class="header-actions">
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" title="Toggle color theme">
+          <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/>
+          </svg>
+        </button>
+        <a class="button button-dark button-small" href="/#playground">Try it <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+
+    <main class="docs-layout page-width">
+      <aside class="docs-sidebar">
+        <span class="micro-label">DOCUMENTATION</span>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#endpoint">Endpoint</a>
+        <a href="#examples">Code examples</a>
+        <a href="#responses">Responses &amp; errors</a>
+        <a href="#limits">Limits</a>
+        <a href="#python-library">Python library</a>
+        <div class="sidebar-callout">
+          <span class="sidebar-icon">N</span>
+          <strong>Try it live</strong>
+          <p>Upload an image in the playground.</p>
+          <a href="/#playground">Open playground ↗</a>
+        </div>
+      </aside>
+
+      <article class="docs-content">
+        <div class="eyebrow"><span class="status-dot"></span> NAYMARK API</div>
+        <h1>Remove a supported Gemini watermark,<br><span class="serif-italic">one request at a time.</span></h1>
+        <p class="docs-lede">Upload an image you created or are authorized to modify. The API runs Naymark's visible-watermark detector and returns a PNG for you to review.</p>
+        <div class="docs-meta"><span>API VERSION 0.1</span><span class="meta-separator"></span><span>JSON ERRORS · PNG OUTPUT</span></div>
+
+        <section class="doc-section" id="quickstart">
+          <div class="doc-section-heading"><span class="doc-number">01</span><h2>Quickstart</h2></div>
+          <p>Send a Gemini-generated image containing the known visible watermark template supported by Naymark. Use multipart form data and name the file field <code>file</code>.</p>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>CURL</span><button class="copy-button" type="button" data-copy="docs-curl">Copy</button></div>
+            <pre><code id="docs-curl">curl -X POST https://naymark.vercel.app/v1/process \
+  -F "file=@image.png;type=image/png" \
+  --output processed.png</code></pre>
+          </div>
+          <p class="inline-note"><span class="note-mark">↳</span> The response body is the PNG itself. Save it as a file or pass the bytes to your image pipeline.</p>
+        </section>
+
+        <section class="doc-section" id="endpoint">
+          <div class="doc-section-heading"><span class="doc-number">02</span><h2>Endpoint</h2></div>
+          <div class="endpoint-card">
+            <span class="method-pill">POST</span>
+            <code>https://naymark.vercel.app/v1/process</code>
+          </div>
+          <div class="spec-grid">
+            <div><span>Content type</span><code>multipart/form-data</code></div>
+            <div><span>File field</span><code>file</code></div>
+            <div><span>Accepted formats</span><code>JPEG, PNG, WebP</code></div>
+            <div><span>Response type</span><code>image/png</code></div>
+            <div><span>Authentication</span><code>None</code></div>
+            <div><span>Cache</span><code>private, no-store</code></div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="examples">
+          <div class="doc-section-heading"><span class="doc-number">03</span><h2>Code examples</h2></div>
+          <p>Use the same endpoint from your preferred language.</p>
+          <h3>Python</h3>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>PYTHON · REQUESTS</span><button class="copy-button" type="button" data-copy="python-example">Copy</button></div>
+            <pre><code id="python-example">import requests
+
+with open("image.png", "rb") as image:
+    response = requests.post(
+        "https://naymark.vercel.app/v1/process",
+        files={"file": ("image.png", image, "image/png")},
+        timeout=60,
+    )
+    response.raise_for_status()
+
+with open("processed.png", "wb") as output:
+    output.write(response.content)</code></pre>
+          </div>
+          <h3>JavaScript</h3>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>JAVASCRIPT · FETCH</span><button class="copy-button" type="button" data-copy="js-example">Copy</button></div>
+            <pre><code id="js-example">const form = new FormData();
+form.append("file", imageFile);
+
+const response = await fetch(
+  "https://naymark.vercel.app/v1/process",
+  { method: "POST", body: form }
+);
+
+if (!response.ok) throw new Error("Image processing failed");
+const processedImage = await response.blob();</code></pre>
+          </div>
+        </section>
+
+        <section class="doc-section" id="responses">
+          <div class="doc-section-heading"><span class="doc-number">04</span><h2>Responses &amp; errors</h2></div>
+          <p>Successful requests return the processed PNG bytes with <code>Content-Type: image/png</code>. Matching and pixel reconstruction are approximate; check the result against your original. Errors return JSON from FastAPI.</p>
+          <div class="error-table">
+            <div><code>400</code><span>Empty or invalid image.</span></div>
+            <div><code>413</code><span>Upload or image dimensions exceed the limit.</span></div>
+            <div><code>415</code><span>Unsupported image format.</span></div>
+            <div><code>422</code><span>Image processing failed or output is too large.</span></div>
+          </div>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>ERROR RESPONSE</span></div>
+            <pre><code>{
+  "detail": "The uploaded image is invalid."
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="doc-section" id="limits">
+          <div class="doc-section-heading"><span class="doc-number">05</span><h2>Limits &amp; privacy</h2></div>
+          <ul class="clean-list">
+            <li><span>Maximum upload</span><strong>4 MiB</strong></li>
+            <li><span>Maximum image size</span><strong>12 megapixels</strong></li>
+            <li><span>Maximum dimension</span><strong>8,000 px</strong></li>
+            <li><span>Response caching</span><strong>Disabled</strong></li>
+          </ul>
+          <p>This API is public and does not require an API key. Anyone with the URL can use it. Only upload images you created or are authorized to modify. The service does not intentionally store uploaded or processed image content.</p>
+        </section>
+
+        <section class="doc-section library-doc" id="python-library">
+          <div class="doc-section-heading"><span class="doc-number">06</span><h2>Use Naymark in Python</h2></div>
+          <p>The API is powered by the <a href="https://pypi.org/project/naymark/" target="_blank" rel="noreferrer">Naymark Python package</a>. Install it to run supported visible-watermark matching directly in your own Python application. It processes images locally and does not upload them to this API.</p>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>INSTALL</span><button class="copy-button" type="button" data-copy="pip-install">Copy</button></div>
+            <pre><code id="pip-install">pip install naymark</code></pre>
+          </div>
+          <div class="code-window doc-code">
+            <div class="code-window-bar"><span>PYTHON</span><button class="copy-button" type="button" data-copy="library-example">Copy</button></div>
+            <pre><code id="library-example">import cv2
+from naymark import remove_watermark
+
+image = cv2.imread("image.png")
+result = remove_watermark(image)
+processed = getattr(result, "image", result)
+cv2.imwrite("processed.png", processed)</code></pre>
+          </div>
+          <p class="scope-note">Naymark is designed for its supported visible watermark template in Gemini-generated images, not arbitrary watermarks. Reconstruction is approximate; inspect the output. It does not target invisible provenance signals. Naymark is an independent project and is not affiliated with Google or Gemini.</p>
+          <a class="button button-dark" href="https://pypi.org/project/naymark/" target="_blank" rel="noreferrer">View Naymark on PyPI <span aria-hidden="true">↗</span></a>
+        </section>
+
+        <div class="docs-bottom">
+          <span>Need a visual walkthrough?</span>
+          <a href="/#playground">Try the live playground ↗</a>
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer page-width">
+      <a class="brand" href="/" aria-label="Naymark home">
+        <span class="brand-mark">N</span><span class="brand-name">naymark</span>
+      </a>
+      <span>Built for images. Made for developers.</span>
+      <div class="footer-links"><a href="/">Home</a><a href="https://pypi.org/project/naymark/" target="_blank" rel="noreferrer">PyPI ↗</a></div>
+    </footer>
+  </body>
+</html>

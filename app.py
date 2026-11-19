@@ -1,17 +1,21 @@
 import asyncio
 import io
 import logging
+from pathlib import Path
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from PIL import Image, UnidentifiedImageError
 from naymark import remove_watermark
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.requests import Request
+from starlette.staticfiles import StaticFiles
 
-app = FastAPI(title="Naymark API", version="0.1.0")
+PUBLIC_DIR = Path(__file__).parent / "public"
+
+app = FastAPI(title="Naymark API", version="0.1.0", docs_url=None, redoc_url=None)
 logger = logging.getLogger("naymark_api")
 
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024
@@ -24,6 +28,8 @@ IMAGE_FORMATS = {
     "image/png": ("PNG", b"\x89PNG\r\n\x1a\n"),
     "image/webp": ("WEBP", b"RIFF"),
 }
+
+app.mount("/assets", StaticFiles(directory=PUBLIC_DIR), name="assets")
 
 
 class InvalidImageError(Exception):
@@ -94,6 +100,17 @@ def process_image(payload: bytes, content_type: str) -> bytes:
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+async def homepage() -> FileResponse:
+    return FileResponse(PUBLIC_DIR / "index.html", media_type="text/html")
+
+
+@app.get("/docs", include_in_schema=False)
+@app.get("/docs/", include_in_schema=False)
+async def documentation() -> FileResponse:
+    return FileResponse(PUBLIC_DIR / "docs" / "index.html", media_type="text/html")
 
 
 @app.post("/v1/process")

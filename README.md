@@ -8,6 +8,8 @@ A small FastAPI service that accepts an image and returns a processed PNG using 
 
 `naymark` supports specific visible watermark patterns in Gemini-generated images. Results are approximate; it is not a general-purpose watermark remover. Only process images you own or are authorized to modify.
 
+The public Vercel site includes an interactive playground at `/` and API documentation at `/docs/`. The playground posts uploads to the same `/v1/process` endpoint described below.
+
 ## API
 
 `POST /v1/process` accepts one multipart file field named `file`. JPEG, PNG, and WebP are supported. The response is a PNG image.
@@ -45,7 +47,7 @@ pytest
 
 This project uses Vercel's Python runtime; Docker is not required.
 
-**From the Vercel dashboard:** Import this Git repository as a new project, keep the project root at the repository root, and deploy. Vercel installs dependencies from `requirements.txt` and detects the FastAPI app in `app.py`.
+**From the Vercel dashboard:** Import this Git repository as a new project, keep the project root at the repository root, and deploy. Vercel installs dependencies from `requirements.txt`, serves the frontend from `public/`, and detects the FastAPI app in `app.py`.
 
 **Using the CLI:**
 

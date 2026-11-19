@@ -1,6 +1,7 @@
 import io
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -54,6 +55,14 @@ def test_frontend_is_served_on_home_with_embedded_playground_and_docs():
     assert docs_without_slash.status_code == 200
     assert stylesheet.status_code == 200
     assert "color-scheme: light" in stylesheet.text
+
+
+def test_api_can_start_when_public_assets_are_not_bundled(tmp_path):
+    api_without_public = FastAPI(docs_url=None, redoc_url=None)
+
+    api.configure_public_routes(api_without_public, tmp_path / "public")
+
+    assert not any(route.path in {"/", "/docs", "/docs/"} for route in api_without_public.routes)
 
 
 def test_rejects_unsupported_content_type():

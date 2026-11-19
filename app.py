@@ -85,15 +85,21 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/", include_in_schema=False)
-async def homepage() -> FileResponse:
-    return FileResponse(PUBLIC_DIR / "index.html", media_type="text/html")
+def configure_public_routes(application: FastAPI, public_dir: Path) -> None:
+    # Vercel serves public assets separately and omits them from the Python function bundle.
+    if not public_dir.is_dir():
+        return
 
+    @application.get("/", include_in_schema=False)
+    async def homepage() -> FileResponse:
+        return FileResponse(public_dir / "index.html", media_type="text/html")
 
-@app.get("/docs", include_in_schema=False)
-@app.get("/docs/", include_in_schema=False)
-async def documentation() -> FileResponse:
-    return FileResponse(PUBLIC_DIR / "docs" / "index.html", media_type="text/html")
+    @application.get("/docs", include_in_schema=False)
+    @application.get("/docs/", include_in_schema=False)
+    async def documentation() -> FileResponse:
+        return FileResponse(public_dir / "docs" / "index.html", media_type="text/html")
+
+    application.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
 
 
 @app.post("/v1/process")
@@ -124,4 +130,4 @@ async def process_upload(file: UploadFile = File(...)) -> Response:
     )
 
 
-app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="public")
+configure_public_routes(app, PUBLIC_DIR)

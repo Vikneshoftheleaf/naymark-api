@@ -1,1 +1,0 @@
-"""Naymark image processing API."""

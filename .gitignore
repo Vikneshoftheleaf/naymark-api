@@ -1,0 +1,14 @@
+.venv
+env
+__pycache__
+.pytest_cache
+*.pyc
+.env
+.wrangler
+node_modules
+workers/api-gateway/.dev.vars
+workers/api-gateway/.dev.vars.*
+!workers/api-gateway/.dev.vars.example
+*.egg-info/
+build/
+dist/

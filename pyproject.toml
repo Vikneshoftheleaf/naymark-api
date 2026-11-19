@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "naymark-api"
+version = "0.1.0"
+description = "Synchronous visible-watermark removal API"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+  "fastapi==0.115.12",
+  "uvicorn==0.34.2",
+  "python-multipart==0.0.20",
+  "Pillow==11.2.1",
+  "numpy==2.2.5",
+  "opencv-python-headless==4.11.0.86",
+  "naymark==0.1.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx==0.28.1",
+  "pytest==8.3.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["services/api/tests"]
+
+[tool.setuptools]
+package-dir = {"" = "services/api"}
+packages = ["app"]
